@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}CIP Simulation Platform{% endblock %}</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --ink: #1f2933;
+    --ink-soft: #52606d;
+    --ink-faint: #7b8794;
+    --line: #d3dae2;
+    --ok: #2e9e6b;
+    --warn: #d97706;
+    --bad: #e02424;
+    --accent: #1e88e5;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.5 "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+  }
+  header .brand {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  header nav a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    margin-right: 14px;
+    font-size: 13px;
+  }
+  header nav a:hover { color: var(--accent); }
+  main {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 20px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .subtitle {
+    color: var(--ink-soft);
+    font-size: 13px;
+    margin: 0 0 20px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  th {
+    background: #f7f9fb;
+    color: var(--ink-faint);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    font-size: 11px;
+  }
+  tr:last-child td { border-bottom: 0; }
+  .status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .status-running  { background: #e3f5eb; color: var(--ok); }
+  .status-pending,
+  .status-starting,
+  .status-stopping { background: #fff4e0; color: var(--warn); }
+  .status-stopped  { background: #eef1f5; color: var(--ink-faint); }
+  .status-failed   { background: #fde8e8; color: var(--bad); }
+  code, .slug {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  .slug a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .slug a:hover { text-decoration: underline; }
+  .empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--ink-faint);
+    background: var(--panel);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+  }
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 24px 0 12px;
+  }
+  .toolbar label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .muted { color: var(--ink-faint); }
+  .toolbar .actions {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .btn {
+    display: inline-block;
+    padding: 7px 14px;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .5; cursor: default; filter: none; }
+  .btn-secondary {
+    background: var(--panel);
+    color: var(--accent);
+  }
+  .btn-danger {
+    background: var(--bad);
+    border-color: var(--bad);
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+  dl.facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 20px;
+    margin: 0;
+  }
+  dl.facts dt { color: var(--ink-faint); font-size: 13px; }
+  dl.facts dd { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .field input, .field select {
+    width: 100%;
+    max-width: 420px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font: inherit;
+    background: #fff;
+  }
+  .field .hint { color: var(--ink-faint); font-size: 12px; margin-top: 4px; }
+  .field .error { color: var(--bad); font-size: 12px; margin-top: 4px; }
+  .notice {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .notice-warn { background: #fff4e0; color: #8a4b00; }
+  .notice-bad  { background: #fde8e8; color: var(--bad); }
+  .notice-info { background: #e8f2fc; color: #0b5394; }
+  .live {
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .live::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    background: var(--ink-faint);
+  }
+  .live.on::before { background: var(--ok); }
+  .live.off::before { background: var(--bad); }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">CIP Simulation Platform</a>
+  <nav>
+    <a href="/">Sessions</a>
+    <a href="/sessions/new/">New session</a>
+    <a href="/api/sessions/">API</a>
+  </nav>
+</header>
+<main>
+  {% block content %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,43 @@
+<script>
+// Live session updates over WebSocket. Shared by the list and detail
+// pages. The server pushes one message per session change; each page
+// decides what to redraw. If the socket drops (Django restart, network
+// blip) it reconnects with a growing delay, capped at 15 s.
+//
+// onChange(session) gets the pushed session summary, or null after a
+// reconnect: changes made while offline were missed, so redraw all.
+function connectSessionEvents(onChange) {
+  var indicator = document.getElementById('live');
+  var delay = 1000;
+  var everConnected = false;
+
+  function setLive(on) {
+    if (!indicator) return;
+    indicator.className = 'live ' + (on ? 'on' : 'off');
+    indicator.textContent = on ? 'live' : 'offline — reconnecting';
+  }
+
+  function open() {
+    var scheme = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    var ws = new WebSocket(scheme + location.host + '/ws/sessions/');
+    ws.onopen = function () {
+      delay = 1000;
+      setLive(true);
+      if (everConnected) onChange(null);
+      everConnected = true;
+    };
+    ws.onmessage = function (e) {
+      var msg;
+      try { msg = JSON.parse(e.data); } catch (err) { return; }
+      if (msg.type === 'session.changed') onChange(msg.session);
+    };
+    ws.onclose = function () {
+      setLive(false);
+      setTimeout(open, delay);
+      delay = Math.min(delay * 2, 15000);
+    };
+  }
+
+  open();
+}
+</script>

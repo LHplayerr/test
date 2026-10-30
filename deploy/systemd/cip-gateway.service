@@ -1,0 +1,39 @@
+[Unit]
+Description=CIP Simulation Platform - OPC UA aggregation gateway
+Documentation=file:///opt/cip-sim/docs/operations.md
+After=network.target redis-server.service
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=cip
+Group=cip
+WorkingDirectory=/opt/cip-sim
+EnvironmentFile=/etc/cip-sim/env
+Environment=PYTHONUNBUFFERED=1
+Environment=ADVERTISE_HOST=127.0.0.1
+
+ExecStart=/opt/cip-sim/.venv/bin/python -m gateway.main \
+    --advertise-host ${ADVERTISE_HOST} --port ${GATEWAY_OPCUA_PORT}
+Restart=on-failure
+RestartSec=5s
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+ReadWritePaths=/var/lib/cip-sim /var/log/cip-sim
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Sessions · CIP Simulation Platform{% endblock %}
+
+{% block content %}
+<h1>Active sessions</h1>
+<p class="subtitle">
+  Each session is reachable through the gateway at
+  <code>{% if endpoint_url %}{{ endpoint_url }}{% else %}opc.tcp://&lt;server&gt;:8080/gateway/{% endif %}</code>.
+</p>
+
+<div class="toolbar">
+  <div class="muted">
+    <span id="session-count">{{ sessions|length }} session{{ sessions|length|pluralize }}</span>
+    &nbsp;·&nbsp;
+    <span id="live" class="live">connecting…</span>
+  </div>
+  <div class="actions">
+    <label>
+      <input type="checkbox"
+             {% if include_stopped %}checked{% endif %}
+             onchange="window.location='?include_stopped=' + (this.checked ? '1' : '0')">
+      Show stopped
+    </label>
+    <a class="btn" href="/sessions/new/">New session</a>
+  </div>
+</div>
+
+{% include "sessions/_table.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% include "sessions/_live.html" %}
+<script>
+(function () {
+  // Any change re-fetches the server-rendered table. Changes often come
+  // in bursts (started + ready within milliseconds), so wait briefly
+  // and redraw once.
+  var pending = null;
+
+  function refresh() {
+    pending = null;
+    fetch('/sessions/rows/' + location.search, { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
+      .then(function (html) {
+        var box = document.createElement('div');
+        box.innerHTML = html;
+        var fresh = box.firstElementChild;
+        var n = Number(fresh.dataset.count);
+        document.getElementById('session-table').replaceWith(fresh);
+        document.getElementById('session-count').textContent =
+          n + ' session' + (n === 1 ? '' : 's');
+      })
+      .catch(function () { /* next change will try again */ });
+  }
+
+  connectSessionEvents(function () {
+    if (pending) clearTimeout(pending);
+    pending = setTimeout(refresh, 300);
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+[Unit]
+Description=CIP Simulation Platform - worker pool daemon
+Documentation=file:///opt/cip-sim/docs/operations.md
+After=network.target redis-server.service
+Requires=redis-server.service
+# Worker processes are children of the daemon; give them a moment.
+TimeoutStopSec=60s
+
+[Service]
+Type=simple
+User=cip
+Group=cip
+WorkingDirectory=/opt/cip-sim
+EnvironmentFile=/etc/cip-sim/env
+Environment=PYTHONUNBUFFERED=1
+
+# The daemon needs the server's intranet IP for worker advertisement.
+# Substituted by install.sh from GATEWAY_PUBLIC_HOST or SERVER_IP.
+Environment=ADVERTISE_HOST=127.0.0.1
+
+ExecStart=/opt/cip-sim/.venv/bin/python -m worker_pool.daemon \
+    --advertise-host ${ADVERTISE_HOST}
+Restart=on-failure
+RestartSec=5s
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+ReadWritePaths=/var/lib/cip-sim /var/log/cip-sim
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

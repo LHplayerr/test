@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session.external_id }} · CIP Simulation Platform{% endblock %}
+
+{% block content %}
+<h1>Session <code>{{ session.external_id }}</code></h1>
+<p class="subtitle">
+  {% if session.label %}{{ session.label }} · {% endif %}
+  <span id="live" class="live">connecting…</span>
+</p>
+
+<div class="notice notice-info">
+  <strong>Bookmark this page.</strong> Its address is the key to this
+  session: anyone with the link can see and stop it, and it is not
+  shown anywhere else.
+</div>
+
+<div id="session-panel">
+<div class="panel">
+  <h2>Status</h2>
+  <dl class="facts">
+    <dt>Status</dt>
+    <dd><span class="status status-{{ session.status }}">{{ session.status }}</span></dd>
+    <dt>Simulation</dt>
+    <dd>{{ session.simulation_id }} <span class="muted">{{ session.simulation_version }}</span></dd>
+    <dt>Created</dt>
+    <dd>{{ session.created_at|date:"Y-m-d H:i:s" }}</dd>
+    <dt>Started</dt>
+    <dd>{{ session.started_at|date:"Y-m-d H:i:s"|default:"—" }}</dd>
+    {% if session.stopped_at %}
+    <dt>Stopped</dt>
+    <dd>{{ session.stopped_at|date:"Y-m-d H:i:s" }}</dd>
+    {% endif %}
+    <dt>Dashboard</dt>
+    <dd>
+      {% if session.status == "running" and session.http_port %}
+        <a href="/s/{{ session.external_id }}/" target="_blank" rel="noopener">Open live dashboard ↗</a>
+      {% elif session.is_terminal %}
+        <span class="muted">not available — session has ended</span>
+      {% else %}
+        <span class="muted">available once the session is running</span>
+      {% endif %}
+    </dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <h2>Connect from CODESYS</h2>
+  <dl class="facts">
+    <dt>Endpoint</dt>
+    <dd><code>{% if endpoint_url %}{{ endpoint_url }}{% else %}opc.tcp://&lt;server&gt;:8080/gateway/{% endif %}</code></dd>
+    <dt>Browse to</dt>
+    <dd><code>Objects → Gateway → Sessions → {{ session.external_id }}</code></dd>
+    <dt>Session UUID</dt>
+    <dd><code>{{ session.id }}</code></dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <h2>Stop</h2>
+  {% if session.is_terminal %}
+    <p class="muted">This session has ended.
+      <a href="/sessions/new/">Start a new one</a>.</p>
+  {% else %}
+    <p class="muted">Stops the simulation and frees its ports. Connected
+      PLCs lose the session folder.</p>
+    <button id="stop-btn" class="btn btn-danger"
+            {% if session.status == "stopping" %}disabled{% endif %}>
+      {% if session.status == "stopping" %}Stopping…{% else %}Stop session{% endif %}
+    </button>
+    <div id="stop-error" class="notice notice-bad" hidden></div>
+  {% endif %}
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% include "sessions/_live.html" %}
+<script>
+(function () {
+  var sessionId = '{{ session.id }}';
+  var apiUrl = '/api/sessions/{{ session.token }}/';
+
+  // Redraw by re-fetching this same page and swapping the panel, so the
+  // markup above is the only definition of how a session looks.
+  function refresh() {
+    fetch(location.pathname, { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        document.getElementById('session-panel')
+          .replaceWith(doc.getElementById('session-panel'));
+        bindStop();
+      })
+      .catch(function () { /* next change will try again */ });
+  }
+
+  // The REST API has no authentication classes, so DRF does not ask
+  // for a CSRF token: the capability token in the URL is the gate.
+  function bindStop() {
+    var btn = document.getElementById('stop-btn');
+    if (!btn) return;
+    btn.onclick = function () {
+      if (!confirm('Stop this session?')) return;
+      btn.disabled = true;
+      btn.textContent = 'Stopping…';
+      fetch(apiUrl, { method: 'DELETE' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('server answered ' + r.status);
+          refresh();
+        })
+        .catch(function (err) {
+          var box = document.getElementById('stop-error');
+          box.textContent = 'Could not stop the session: ' + err.message;
+          box.hidden = false;
+          btn.disabled = false;
+          btn.textContent = 'Stop session';
+        });
+    };
+  }
+
+  bindStop();
+  connectSessionEvents(function (s) {
+    if (s === null || s.id === sessionId) refresh();
+  });
+})();
+</script>
+{% endblock %}

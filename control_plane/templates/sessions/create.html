@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}New session · CIP Simulation Platform{% endblock %}
+
+{% block content %}
+<h1>New session</h1>
+<p class="subtitle">Start a simulation and get an OPC UA folder for your PLC.</p>
+
+{% if not simulations %}
+<div class="notice notice-bad">
+  No simulations are available. An operator needs to run
+  <code>python manage.py sync_catalog</code>.
+</div>
+{% else %}
+<form id="create-form" class="panel" novalidate>
+  <div class="field">
+    <label for="simulation_id">Simulation</label>
+    <select id="simulation_id" name="simulation_id">
+      {% for sim in simulations %}
+        <option value="{{ sim.simulation_id }}">{{ sim.display_name }} ({{ sim.version }})</option>
+      {% endfor %}
+    </select>
+    <div class="error" data-for="simulation_id"></div>
+  </div>
+
+  <div class="field">
+    <label for="slug">Slug <span class="muted">(optional)</span></label>
+    <input id="slug" name="slug" placeholder="cip_live" autocomplete="off"
+           pattern="[a-z][a-z0-9_]{0,63}" maxlength="64">
+    <div class="hint">
+      The folder name CODESYS sees. Lowercase letters, digits and
+      underscores, starting with a letter. Without a slug the folder is a
+      random UUID that changes every time.
+    </div>
+    <div class="error" data-for="slug"></div>
+  </div>
+
+  <div class="notice notice-warn">
+    If the slug is already in use, the session currently using it is
+    <strong>stopped</strong> and this one takes over the name.
+  </div>
+
+  <div class="field">
+    <label for="label">Label <span class="muted">(optional)</span></label>
+    <input id="label" name="label" placeholder="Group 3 lab exercise" maxlength="128">
+    <div class="error" data-for="label"></div>
+  </div>
+
+  <div id="form-error" class="notice notice-bad" hidden></div>
+
+  <button id="submit-btn" type="submit" class="btn">Start session</button>
+  <a href="/" class="btn btn-secondary">Cancel</a>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById('create-form');
+  if (!form) return;
+  var button = document.getElementById('submit-btn');
+  var formError = document.getElementById('form-error');
+
+  function clearErrors() {
+    form.querySelectorAll('.error').forEach(function (el) { el.textContent = ''; });
+    formError.hidden = true;
+  }
+
+  // DRF validation errors come back as {field: ["message", ...]}.
+  // Field errors go under their input; anything else goes on top.
+  function showErrors(data) {
+    var shown = false;
+    Object.keys(data || {}).forEach(function (key) {
+      var el = form.querySelector('.error[data-for="' + key + '"]');
+      var msg = Array.isArray(data[key]) ? data[key].join(' ') : String(data[key]);
+      if (el) {
+        el.textContent = msg;
+        shown = true;
+      } else {
+        formError.textContent = msg;
+        formError.hidden = false;
+        shown = true;
+      }
+    });
+    if (!shown) {
+      formError.textContent = 'Something went wrong. Try again.';
+      formError.hidden = false;
+    }
+  }
+
+  // The API only parses JSON, so the form is sent with fetch instead
+  // of a plain HTML form post.
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearErrors();
+    button.disabled = true;
+    button.textContent = 'Starting…';
+
+    var payload = {
+      simulation_id: form.simulation_id.value,
+      slug: form.slug.value.trim(),
+      label: form.label.value.trim()
+    };
+
+    fetch('/api/sessions/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; })
+          .then(function (data) { return { status: r.status, data: data }; });
+      })
+      .then(function (res) {
+        if (res.status === 201 && res.data.token) {
+          window.location = '/sessions/' + res.data.token + '/';
+          return;
+        }
+        if (res.data.token) {
+          // 503 with a session body: the row exists but the start
+          // command never reached the worker pool.
+          res.data = { detail: 'The worker pool could not be reached. ' +
+                               'The session was not started.' };
+        }
+        showErrors(res.data);
+        button.disabled = false;
+        button.textContent = 'Start session';
+      })
+      .catch(function () {
+        showErrors({ detail: 'Could not reach the server.' });
+        button.disabled = false;
+        button.textContent = 'Start session';
+      });
+  });
+})();
+</script>
+{% endblock %}

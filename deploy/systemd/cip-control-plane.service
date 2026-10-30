@@ -1,0 +1,42 @@
+[Unit]
+Description=CIP Simulation Platform - Django control plane (HTTP + WebSocket)
+Documentation=file:///opt/cip-sim/docs/operations.md
+After=network.target redis-server.service
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=cip
+Group=cip
+WorkingDirectory=/opt/cip-sim
+EnvironmentFile=/etc/cip-sim/env
+Environment=PYTHONUNBUFFERED=1
+Environment=DJANGO_SETTINGS_MODULE=control_plane.settings.prod
+
+ExecStart=/opt/cip-sim/.venv/bin/uvicorn control_plane.asgi:application \
+    --host 0.0.0.0 --port 8000 --workers 1 --proxy-headers
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30s
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+ReadWritePaths=/var/lib/cip-sim /var/log/cip-sim
+
+# Logs go to journald; use `journalctl -u cip-control-plane`
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

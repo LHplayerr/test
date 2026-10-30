@@ -1,0 +1,227 @@
+<style>
+  /* Wide card for the diagram + metrics + trends row */
+  .cip-wide { grid-column: 1 / -1; }
+
+  .diagram-wrap svg { width: 100%; height: auto; display: block; }
+
+  /* Pipes */
+  .pipe { fill: none; stroke: #b7c0cc; stroke-width: 8;
+          stroke-linecap: round; stroke-linejoin: round; }
+  .pipe.flow { stroke-dasharray: 11 13; animation: cip-dash 0.7s linear infinite; }
+  .pipe.flow.water   { stroke: #1e88e5; }
+  .pipe.flow.caustic { stroke: #fb8c00; }
+  .pipe.flow.acid    { stroke: #d81b8c; }
+  .pipe.flow.mixture { stroke: #7e57c2; }
+  @keyframes cip-dash { to { stroke-dashoffset: -24; } }
+
+  .arrow { fill: #64748b; }
+  .equip { fill: #cbd5e1; stroke: #64748b; stroke-width: 2; }
+  .equip-label { fill: #1f2933; font-size: 15px; font-weight: 600; }
+  .equip-sub { fill: #52606d; font-size: 12.5px; }
+  .valve-label { fill: #52606d; font-size: 13px; }
+  .tick-label { fill: #7b8794; font-size: 12px; }
+
+  .valve { fill: #ffffff; stroke: #64748b; stroke-width: 2; }
+  .valve.cmd { fill: #d97706; stroke: #a8620a; }
+  .valve.flow { fill: #2e9e6b; stroke: #1c6a47; }
+
+  .pump-run { fill: #2e9e6b; stroke: #1c6a47; stroke-width: 2; }
+  .tank-bg { fill: #ffffff; }
+  .tank-outline { fill: none; stroke: #64748b; stroke-width: 2.5; }
+  .chip-bg { fill: #ffffff; opacity: .82; }
+  .chip-text { fill: #1f2933; font-size: 14px; font-weight: 600; }
+
+  .heater-off { fill: #cbd5e1; stroke: #64748b; stroke-width: 2; }
+  .heater-on  { fill: #ffd8a8; stroke: #d97706; stroke-width: 2.5; }
+
+  /* Metric tiles */
+  .cip-metrics { display: grid; grid-template-columns: repeat(4, 1fr);
+                 gap: 10px; margin-top: 12px; }
+  @media (max-width: 720px) { .cip-metrics { grid-template-columns: repeat(2, 1fr); } }
+  .cip-tile { background: #f7f9fb; border: 1px solid #d3dae2;
+              border-radius: 8px; padding: 9px 11px; }
+  .cip-tile .k { font-size: 11px; color: #7b8794;
+                 text-transform: uppercase; letter-spacing: .4px; }
+  .cip-tile .v { font-size: 22px; font-weight: 650;
+                 font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .cip-tile .u { font-size: 12px; color: #7b8794; font-weight: 500; }
+
+  /* Trends */
+  .cip-trends { display: grid; grid-template-columns: 1fr 1fr;
+                gap: 10px; margin-top: 10px; }
+  @media (max-width: 620px) { .cip-trends { grid-template-columns: 1fr; } }
+  .cip-trend { background: #f7f9fb; border: 1px solid #d3dae2;
+               border-radius: 8px; padding: 8px 10px; }
+  .cip-trend .t-head { display: flex; justify-content: space-between;
+                       font-size: 11px; color: #7b8794; }
+  .cip-trend .t-axis { display: flex; justify-content: space-between;
+                       font-size: 10.5px; color: #7b8794; margin-top: 2px; }
+  .cip-trend canvas { width: 100%; height: 46px; display: block; margin-top: 2px; }
+
+  /* Pills + badges */
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge { font-size: 11px; font-weight: 600; padding: 2px 7px;
+           border-radius: 999px; border: 1px solid #d3dae2;
+           background: #f7f9fb; color: #52606d; }
+  .badge.cmd { background: #fff3e0; border-color: #f2ce9a; color: #9a5a06; }
+
+  /* Fault list */
+  .alarm-none { color: #2e9e6b; font-weight: 600; }
+  .alarm-item { display: flex; align-items: baseline; gap: 8px;
+                padding: 5px 0; border-bottom: 1px dashed #d3dae2; }
+  .alarm-item:last-child { border-bottom: 0; }
+  .alarm-item .bit { font-size: 11px; font-weight: 700; color: #fff;
+                     background: #e02424; border-radius: 5px;
+                     padding: 1px 6px; flex: none;
+                     font-variant-numeric: tabular-nums; }
+  .alarm-item .txt { color: #7a1414; }
+
+  /* Heat panel */
+  .heat-line { display: flex; justify-content: space-between; padding: 3px 0; }
+</style>
+
+<section class="card cip-wide">
+  <h2>Process</h2>
+  <div class="diagram-wrap">
+    <svg viewBox="0 62 960 456" role="img" aria-label="CIP process diagram">
+      <path id="p-water"   class="pipe" d="M780 96 H450 V180"></path>
+      <path id="p-acid"    class="pipe" d="M780 152 H505 V180"></path>
+      <path id="p-caustic" class="pipe" d="M865 315 V232 H560"></path>
+      <path id="p-suction" class="pipe" d="M480 430 V456 H358"></path>
+      <path id="p-common"  class="pipe" d="M302 456 H230"></path>
+      <path id="p-return"  class="pipe" d="M230 456 V300 H120"></path>
+      <path id="p-drain"   class="pipe" d="M230 456 H120"></path>
+
+      <polygon class="arrow" points="444,168 456,168 450,180"></polygon>
+      <polygon class="arrow" points="499,168 511,168 505,180"></polygon>
+      <polygon class="arrow" points="572,226 572,238 560,232"></polygon>
+      <polygon class="arrow" points="372,450 372,462 360,456"></polygon>
+      <polygon class="arrow" points="224,312 236,312 230,300"></polygon>
+      <polygon class="arrow" points="132,450 132,462 120,456"></polygon>
+
+      <!-- Tank -->
+      <rect class="tank-bg" x="400" y="180" width="160" height="250" rx="8"></rect>
+      <clipPath id="tankClip">
+        <rect x="404" y="186" width="152" height="238" rx="5"></rect>
+      </clipPath>
+      <rect id="liquid" x="404" y="424" width="152" height="0"
+            fill="#cbd5e1" clip-path="url(#tankClip)"></rect>
+      <rect class="tank-outline" x="400" y="180" width="160" height="250" rx="8"></rect>
+      <rect class="chip-bg" x="428" y="196" width="104" height="24" rx="6"></rect>
+      <text class="chip-text" id="liquid-name" x="480" y="213"
+            text-anchor="middle">Empty</text>
+
+      <line x1="560" y1="186" x2="568" y2="186" stroke="#64748b"></line>
+      <text class="tick-label" x="572" y="190">100</text>
+      <line x1="560" y1="305" x2="568" y2="305" stroke="#64748b"></line>
+      <text class="tick-label" x="572" y="309">50</text>
+      <line x1="560" y1="424" x2="568" y2="424" stroke="#64748b"></line>
+      <text class="tick-label" x="572" y="428">0 %</text>
+
+      <!-- Supplies -->
+      <rect class="equip" x="780" y="74" width="150" height="44" rx="10"></rect>
+      <text class="equip-label" x="855" y="102" text-anchor="middle">Water supply</text>
+      <rect class="equip" x="780" y="130" width="150" height="44" rx="10"></rect>
+      <text class="equip-label" x="855" y="158" text-anchor="middle">Acid supply</text>
+
+      <rect x="758" y="288" width="192" height="158" rx="12"
+            fill="#fff8f0" stroke="#f2ddc0"></rect>
+      <text class="equip-sub" x="854" y="308" text-anchor="middle"
+            style="font-weight:600;fill:#9a5a06">Caustic tank + heater</text>
+      <rect class="tank-bg" x="822" y="318" width="86" height="104" rx="6"></rect>
+      <rect class="tank-outline" x="822" y="318" width="86" height="104" rx="6"></rect>
+      <text class="equip-label" x="865" y="360" text-anchor="middle"
+            style="font-size:13px">Caustic</text>
+      <rect id="heater" class="heater-off" x="770" y="352" width="42" height="34" rx="6"></rect>
+      <text class="valve-label" x="791" y="402" text-anchor="middle">Heater</text>
+      <text class="equip-sub" id="caustic-temp" x="865" y="410"
+            text-anchor="middle">20.0 °C</text>
+
+      <!-- Valves -->
+      <polygon id="v-water"   class="valve" points="620,86 632,96 620,106 608,96"></polygon>
+      <text class="valve-label" x="620" y="80" text-anchor="middle">Water valve</text>
+      <polygon id="v-acid"    class="valve" points="620,142 632,152 620,162 608,152"></polygon>
+      <text class="valve-label" x="620" y="136" text-anchor="middle">Acid valve</text>
+      <polygon id="v-caustic" class="valve" points="700,222 712,232 700,242 688,232"></polygon>
+      <text class="valve-label" x="700" y="216" text-anchor="middle">Caustic valve</text>
+
+      <!-- Pump -->
+      <circle id="pump" class="equip" cx="330" cy="456" r="28"></circle>
+      <path d="M318 456 L342 442 L342 470 Z" fill="#ffffff"
+            stroke="#64748b" stroke-width="1.5"></path>
+      <text class="valve-label" x="330" y="500" text-anchor="middle">Pump</text>
+
+      <!-- Return / recovery -->
+      <polygon id="v-return" class="valve" points="230,368 242,378 230,388 218,378"></polygon>
+      <text class="valve-label" x="248" y="382" text-anchor="start">Return valve</text>
+      <rect class="equip" x="40" y="282" width="80" height="40" rx="10"></rect>
+      <text class="equip-sub" x="80" y="299" text-anchor="middle"
+            style="font-weight:600">Chemical</text>
+      <text class="equip-sub" x="80" y="314" text-anchor="middle">recovery</text>
+
+      <!-- Drain -->
+      <polygon id="v-drain" class="valve" points="185,446 197,456 185,466 173,456"></polygon>
+      <text class="valve-label" x="185" y="440" text-anchor="middle">Drain valve</text>
+      <rect class="equip" x="40" y="440" width="80" height="34" rx="8"></rect>
+      <text class="equip-sub" x="80" y="461" text-anchor="middle">Drain / sewer</text>
+    </svg>
+  </div>
+
+  <div class="cip-metrics">
+    <div class="cip-tile">
+      <div class="k">Level</div>
+      <div class="v"><span id="m-level">0.0</span><span class="u"> %</span></div>
+    </div>
+    <div class="cip-tile">
+      <div class="k">Flow (pump)</div>
+      <div class="v"><span id="m-flow">0.0</span><span class="u"> L/min</span></div>
+    </div>
+    <div class="cip-tile">
+      <div class="k">Process temp.</div>
+      <div class="v"><span id="m-temp">20.0</span><span class="u"> °C</span></div>
+    </div>
+    <div class="cip-tile">
+      <div class="k">Conductivity</div>
+      <div class="v"><span id="m-cond">0.0</span><span class="u"> su</span></div>
+    </div>
+  </div>
+
+  <div class="cip-trends">
+    <div class="cip-trend">
+      <div class="t-head"><span>Level</span><span id="tr-level-v">0.0 %</span></div>
+      <canvas id="tr-level" width="300" height="46"></canvas>
+      <div class="t-axis"><span>0–100 %</span><span>← ~90 s</span></div>
+    </div>
+    <div class="cip-trend">
+      <div class="t-head"><span>Process temp.</span><span id="tr-temp-v">20.0 °C</span></div>
+      <canvas id="tr-temp" width="300" height="46"></canvas>
+      <div class="t-axis"><span>10–90 °C</span><span>← ~90 s</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Actual state</h2>
+  <div class="kv"><span class="k">Pump</span><span class="v" id="s-pump">--</span></div>
+  <div class="kv"><span class="k">Action</span><span class="v" id="s-action">Idle</span></div>
+  <div class="kv"><span class="k">Liquid</span><span class="v" id="s-liquid">Empty</span></div>
+  <div class="kv"><span class="k">Level</span><span class="v" id="s-level">0.0 %</span></div>
+  <div class="kv"><span class="k">Flow route</span><span class="v" id="s-route">Closed</span></div>
+</section>
+
+<section class="card">
+  <h2>Caustic tank &amp; heating</h2>
+  <div class="heat-line"><span class="k">Heater command</span><span class="v" id="h-cmd">Off</span></div>
+  <div class="heat-line"><span class="k">Caustic tank temp.</span><span class="v" id="h-temp">20.0 °C</span></div>
+  <div class="heat-line"><span class="k">Temp. setpoint</span><span class="v" id="h-sp">45.0 °C</span></div>
+</section>
+
+<section class="card">
+  <h2>Commands</h2>
+  <div class="pill-row" id="command-pills"></div>
+</section>
+
+<section class="card">
+  <h2>Alarms / faults</h2>
+  <div id="faults"></div>
+</section>

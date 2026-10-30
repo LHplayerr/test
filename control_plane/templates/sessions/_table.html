@@ -1,0 +1,48 @@
+<div id="session-table" data-count="{{ sessions|length }}">
+{% if sessions %}
+<table>
+  <thead>
+    <tr>
+      <th>Slug</th>
+      <th>Simulation</th>
+      <th>Status</th>
+      <th>UUID</th>
+      <th>Port</th>
+      <th>Created</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in sessions %}
+    <tr>
+      <td class="slug">
+        {% if s.slug %}
+          {% if s.http_port and s.status == "running" %}
+            <a href="/s/{{ s.slug }}/">{{ s.slug }}</a>
+          {% else %}
+            {{ s.slug }}
+            {% if not s.is_terminal %}<span class="muted">(starting)</span>{% endif %}
+          {% endif %}
+        {% else %}
+          <span class="muted">—</span>
+        {% endif %}
+      </td>
+      <td>
+        {{ s.simulation_id }}
+        <span class="muted">{{ s.simulation_version }}</span>
+      </td>
+      <td><span class="status status-{{ s.status }}">{{ s.status }}</span></td>
+      <td><code>{{ s.id }}</code></td>
+      <td>{{ s.port|default:"—" }}</td>
+      <td>{{ s.created_at|date:"Y-m-d H:i:s" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">
+  No active sessions.
+  <a href="/sessions/new/">Create one</a>, or run
+  <code>./scripts/stack.sh create --slug cip_live</code>.
+</div>
+{% endif %}
+</div>

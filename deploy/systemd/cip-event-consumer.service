@@ -1,0 +1,38 @@
+[Unit]
+Description=CIP Simulation Platform - Django event consumer
+Documentation=file:///opt/cip-sim/docs/operations.md
+After=network.target redis-server.service cip-control-plane.service
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=cip
+Group=cip
+WorkingDirectory=/opt/cip-sim
+EnvironmentFile=/etc/cip-sim/env
+Environment=PYTHONUNBUFFERED=1
+Environment=DJANGO_SETTINGS_MODULE=control_plane.settings.prod
+
+ExecStart=/opt/cip-sim/.venv/bin/python manage.py run_event_consumer
+Restart=on-failure
+RestartSec=5s
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+ReadWritePaths=/var/lib/cip-sim /var/log/cip-sim
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+[Unit]
+Description=CIP Simulation Platform - purge old session events
+Documentation=file:///opt/cip-sim/docs/operations.md
+
+[Service]
+Type=oneshot
+User=cip
+Group=cip
+WorkingDirectory=/opt/cip-sim
+EnvironmentFile=/etc/cip-sim/env
+Environment=DJANGO_SETTINGS_MODULE=control_plane.settings.prod
+
+ExecStart=/opt/cip-sim/.venv/bin/python manage.py purge_events --days 30
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/cip-sim /var/log/cip-sim
+
+StandardOutput=journal
+StandardError=journal

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{SIMULATION_NAME}</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --panel-2: #f7f9fb;
+    --ink: #1f2933;
+    --ink-soft: #52606d;
+    --ink-faint: #7b8794;
+    --line: #d3dae2;
+    --ok: #2e9e6b;
+    --warn: #d97706;
+    --bad: #e02424;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(15,23,42,.08), 0 2px 8px rgba(15,23,42,.04);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.4; padding: 12px; }
+
+  .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 10px 14px; margin-bottom: 12px; }
+  .brand { font-size: 17px; font-weight: 600; margin-right: auto; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: flex; align-items: center; gap: 7px; background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px 4px 9px;
+    font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-faint); flex: none; }
+  .dot.ok { background: var(--ok); }
+  .dot.warn { background: var(--warn); }
+  .dot.bad { background: var(--bad); }
+
+  .banner { display: none; align-items: center; gap: 10px; background: #fff4f4;
+    border: 1px solid #f3c0c0; color: #a01919; border-radius: var(--radius);
+    padding: 9px 14px; margin-bottom: 12px; font-size: 13px; }
+  body.stale .banner { display: flex; }
+  body.stale #app { opacity: .55; }
+
+  #app { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 12px 14px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .6px;
+    color: var(--ink-faint); margin: 0 0 10px; font-weight: 600; }
+  .kv { display: flex; justify-content: space-between; gap: 10px;
+    padding: 5px 0; border-bottom: 1px dashed var(--line); }
+  .kv:last-child { border-bottom: 0; }
+  .kv .k { color: var(--ink-soft); }
+  .kv .v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">{SIMULATION_NAME}</div>
+    <div class="chips">
+      <span class="chip"><span class="dot" id="dot-conn"></span><span id="conn-text">connecting</span></span>
+      <span class="chip" id="endpoint-chip">--</span>
+    </div>
+  </header>
+
+  <div class="banner">Connection lost &mdash; showing last received data.</div>
+
+  <main id="app">
+{PLUGIN_BODY}
+  </main>
+
+<script>
+(function () {
+  'use strict';
+  var STALE_MS = 3000;
+  var POLL_MS = 250;       // 4 Hz, matches UI_BROADCAST_HZ
+  var lastGood = 0;
+
+  function updateFreshness() {
+    var age = lastGood ? Date.now() - lastGood : Infinity;
+    var stale = age > STALE_MS;
+    var dot = document.getElementById('dot-conn');
+    var text = document.getElementById('conn-text');
+    if (!lastGood) {
+      dot.className = 'dot bad'; text.textContent = 'no data';
+    } else if (stale) {
+      dot.className = 'dot bad'; text.textContent = 'stale ' + Math.floor(age / 1000) + 's';
+    } else {
+      dot.className = 'dot ok'; text.textContent = 'live';
+    }
+    document.body.classList.toggle('stale', stale);
+  }
+
+  async function poll() {
+    try {
+      var r = await fetch('api/state', { cache: 'no-store' });
+      if (!r.ok) throw new Error('bad status');
+      var data = await r.json();
+      lastGood = Date.now();
+      document.getElementById('endpoint-chip').textContent = data.endpoint || '--';
+      if (typeof window.renderState === 'function') {
+        window.renderState(data.state || {});
+      }
+    } catch (e) {
+      // freshness banner handles it
+    }
+    updateFreshness();
+  }
+
+  poll();
+  setInterval(poll, POLL_MS);
+})();
+</script>
+<script>
+{PLUGIN_SCRIPT}
+</script>
+</body>
+</html>
