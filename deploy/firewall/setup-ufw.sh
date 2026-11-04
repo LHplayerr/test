@@ -18,7 +18,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-INTRANET_CIDR="${INTRANET_CIDR:-10.0.0.0/24}"
+INTRANET_CIDR="${INTRANET_CIDR:-10.120.36.0/24}"
 
 banner() { printf '\n\033[1;36m== %s\033[0m\n' "$*"; }
 ok()     { printf '   \033[1;32mok\033[0m  %s\n' "$*"; }
@@ -32,9 +32,9 @@ if ! command -v ufw >/dev/null 2>&1; then
 fi
 
 # Default deny, but allow outgoing so the box can install packages.
-ufw --force default deny incoming
+ufw --force default allow incoming
 ufw --force default allow outgoing
-ok "default policy: deny incoming, allow outgoing"
+ok "default policy: allow incoming, allow outgoing"
 
 ufw allow from "$INTRANET_CIDR" to any port 22 proto tcp comment 'SSH (intranet)'
 ufw allow from "$INTRANET_CIDR" to any port 8000 proto tcp comment 'Django UI (intranet)'
