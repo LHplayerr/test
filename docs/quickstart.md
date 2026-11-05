@@ -8,7 +8,7 @@ Siirry osoitteeseen:
 http://<palvelimen-ip>:8000/
 ```
 
-Esimerkki: `http://10.120.32.67:8000/`
+Esimerkki: `http://10.120.32.68:8000/`
 
 Näet listan käynnissä olevista istunnoista. Jos lista on tyhjä, se on normaalia — kukaan ei ole vielä käynnistänyt simulaatiota.
 
@@ -49,7 +49,7 @@ Istunnon yksityiskohtasivulla näet:
 
 Istunnon yksityiskohtasivulla on linkki **"Open live dashboard"**. Se avaa työntekijän reaaliaikaisen kojelaudan, jossa näet:
 
-- Mittaukset päivittyvät 4 kertaa sekunnissa
+- Mittaukset, jotka päivittyvät 4 kertaa sekunnissa
 - Tilakaaviot ja trendit
 - Mahdolliset hälytykset
 

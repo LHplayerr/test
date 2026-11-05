@@ -8,10 +8,8 @@ Yksi OPC UA -päätepiste, monta rinnakkaista simulaatioistuntoa — CODESYS nä
 ### Palvelimella (Ubuntu 22.04 LTS)
 
 ```bash
-# 1. Asenna alusta (kloonaa repo, asentaa riippuvuudet, migroi tietokannan)
-git clone https://github.com/tomasmak-boop/SimulaattoriProjekti /opt/cip-sim
-cd /opt/cip-sim
-sudo INTRANET_CIDR=10.0.0.0/24 ./install.sh
+# 1. Asenna alusta
+sudo apt-get update -y && sudo apt-get install -y git && sudo git clone https://github.com/tomasmak-boop/SimulaattoriProjekti /opt/cip-sim && cd /opt/cip-sim && sudo chmod +x install.sh deploy.sh deploy/firewall/setup-ufw.sh && ls -l install.sh && sudo ./install.sh 2>&1 | tee /opt/cip-install.log && sudo ./deploy/firewall/setup-ufw.sh
 
 # 2. Tarkista että palvelut käynnistyivät
 sudo systemctl status cip-control-plane cip-worker-pool cip-event-consumer cip-gateway
@@ -23,8 +21,7 @@ http://<palvelimen-ip>:8000/
 ## Päivitys
 
 ```bash
-cd /opt/cip-sim
-sudo ./deploy.sh
+cd /opt/cip-sim && sudo ./deploy.sh
 ```
 
 ## Arkkitehtuuri lyhyesti

@@ -343,13 +343,11 @@ async def _run(args: argparse.Namespace) -> int:
                 ),
                 name=f"heartbeat-{args.session_id}",
             )
-    except* Exception as eg:
-        # TaskGroup wraps errors. Log each and return non-zero below so
-        # the daemon marks the session failed rather than cleanly
-        # stopped. `return` is not allowed inside `except*`, hence the
-        # flag.
-        for exc in eg.exceptions:
-            log.error("worker task failed", extra={"error": repr(exc)})
+    except Exception as exc:
+        # TaskGroup raises ExceptionGroup on Python 3.11+. Catch it as a
+        # normal exception so this file parses on Python <3.11 and the
+        # version guard above can exit cleanly.
+        log.error("worker task failed", extra={"error": repr(exc)})
         failed = True
     finally:
         dashboard.stop()
