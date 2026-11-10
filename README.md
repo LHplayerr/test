@@ -21,7 +21,7 @@ http://<palvelimen-ip>:8000/
 ## Päivitys
 
 ```bash
-cd /opt/cip-sim && sudo ./deploy.sh
+cd /opt/cip-sim && sudo chmod +x deploy.sh && sudo ./deploy.sh
 ```
 
 ## Arkkitehtuuri lyhyesti

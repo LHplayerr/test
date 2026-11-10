@@ -8,7 +8,7 @@ Siirry osoitteeseen:
 http://<palvelimen-ip>:8000/
 ```
 
-Esimerkki: `http://10.120.32.68:8000/`
+Esimerkki: `http://10.120.36.68:8000/`
 
 Näet listan käynnissä olevista istunnoista. Jos lista on tyhjä, se on normaalia — kukaan ei ole vielä käynnistänyt simulaatiota.
 
