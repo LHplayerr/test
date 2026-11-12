@@ -1,4 +1,6 @@
-Tämä opas on tarkoitettu **opiskelijoille ja käyttäjille**, jotka haluavat käynnistää simulaation ja liittää sen CODESYS:iin. Sinun ei tarvitse avata päätettä lainkaan — kaikki tapahtuu selaimessa.
+# Pikaopas — CIP-simulaatioalusta
+
+Tämä opas on tarkoitettu **opiskelijoille ja käyttäjille**, jotka haluavat käynnistää simulaation ja liittää sen CODESYS:iin. Sinun ei tarvitse avata päätettä lainkaan - kaikki tapahtuu selaimessa.
 
 ## 1. Avaa selain
 
@@ -10,7 +12,7 @@ http://<palvelimen-ip>:8000/
 
 Esimerkki: `http://10.120.36.68:8000/`
 
-Näet listan käynnissä olevista istunnoista. Jos lista on tyhjä, se on normaalia — kukaan ei ole vielä käynnistänyt simulaatiota.
+Näet listan käynnissä olevista istunnoista. Jos lista on tyhjä, se on normaalia - kukaan ei ole vielä käynnistänyt simulaatiota.
 
 ## 2. Luo uusi istunto
 
@@ -53,7 +55,7 @@ Istunnon yksityiskohtasivulla on linkki **"Open live dashboard"**. Se avaa työn
 - Tilakaaviot ja trendit
 - Mahdolliset hälytykset
 
-Kojelauta ei vaadi erillistä kirjautumista — se on suojattu istunnon tokenilla, joka on osa URL-osoitetta.
+Kojelauta ei vaadi erillistä kirjautumista - se on suojattu istunnon tokenilla, joka on osa URL-osoitetta.
 
 ## 5. Pysäytä istunto
 
