@@ -9,7 +9,7 @@ Yksi OPC UA -päätepiste, monta rinnakkaista simulaatioistuntoa - CODESYS näke
 
 ```bash
 # 1. Asenna alusta
-sudo apt-get update -y && sudo apt-get install -y git && sudo git clone https://github.com/tomasmak-boop/SimulaattoriProjekti /opt/cip-sim && cd /opt/cip-sim && sudo chmod +x install.sh deploy.sh deploy/firewall/setup-ufw.sh && ls -l install.sh && sudo ./install.sh 2>&1 | tee /opt/cip-install.log && sudo ./deploy/firewall/setup-ufw.sh
+sudo apt-get update -y && sudo apt-get install -y git && sudo git clone https://github.com/tomasmak-boop/SimulaattoriProjekti /opt/cip-sim && cd /opt/cip-sim && sudo chmod +x install.sh deploy.sh deploy/firewall/setup-ufw.sh && ls -l install.sh && sudo ./install.sh 2>&1 | tee /opt/cip-install.log && sudo INTRANET_CIDR=10.0.0.0/24 ./deploy/firewall/setup-ufw.sh
 
 # 2. Tarkista että palvelut käynnistyivät
 sudo systemctl status cip-control-plane cip-worker-pool cip-event-consumer cip-gateway
