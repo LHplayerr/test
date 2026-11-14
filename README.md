@@ -1,7 +1,7 @@
 # CIP-simulaatioalusta
 
 Monisessiollinen OPC UA -yhdyskäytävä ja ohjauspaneeli prosessisimulaatioille.  
-Yksi OPC UA -päätepiste, monta rinnakkaista simulaatioistuntoa — CODESYS näkee jokaisen omana kansi­onaan.
+Yksi OPC UA -päätepiste, monta rinnakkaista simulaatioistuntoa - CODESYS näkee jokaisen omana kansi­onaan.
 
 ## Pika-aloitus
 
@@ -18,27 +18,27 @@ sudo systemctl status cip-control-plane cip-worker-pool cip-event-consumer cip-g
 http://<palvelimen-ip>:8000/
 ```
 
-## Päivitys
+### Päivitys
 
 ```bash
-cd /opt/cip-sim && sudo ./deploy.sh
+cd /opt/cip-sim && sudo chmod +x deploy.sh && sudo ./deploy.sh
 ```
 
 ## Arkkitehtuuri lyhyesti
 
 ```text
 CODESYS / SCADA ──┐
-Selain ───────────┼──▶ OPC UA -yhdyskäytävä :8080 ──▶ Redis Streams ──▶ Worker Pool Dameon
+Selain ───────────┼──▶ OPC UA -yhdyskäytävä :8080 ──▶ Redis Streams ──▶ Worker Pool Daemon
 opcua_cli ────────┘     Django Control Plane :8000                             │
                                                                                ▼
                                                                         Worker prosessit
                                                                         (OPC UA :5xxx, HTTP :6xxx)
 ```
 
-- **Django-ohjauspaneeli (:8000)** — selain-UI, REST-rajapinta, WebSocket
-- **OPC UA -yhdyskäytävä (:8080)** — yksi vakaa päätepiste kaikille istunnoille
-- **Worker Pool Daemon** — luo ja valvoo simulaatioprosesseja
-- **Redis Streams** — komentoväylä, tapahtumavirta, sydänlyönnit, porttivaraukset
+- **Django-ohjauspaneeli (:8000)** - selain-UI, REST-rajapinta, WebSocket
+- **OPC UA -yhdyskäytävä (:8080)** - yksi vakaa päätepiste kaikille istunnoille
+- **Worker Pool Daemon** - luo ja valvoo simulaatioprosesseja
+- **Redis Streams** - komentoväylä, tapahtumavirta, sydänlyönnit, porttivaraukset
 
 ## Hakemistorakenne
 

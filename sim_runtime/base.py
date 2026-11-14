@@ -69,9 +69,9 @@ class BaseSimulation(ABC):
       into BadOutOfRange for the OPC UA client.
     """
 
-    SIMULATION_ID: ClassVar[str]        # unique, lowercase, no spaces
-    SIMULATION_NAME: ClassVar[str]      # human label
-    SIMULATION_VERSION: ClassVar[str]   # semantic, e.g. "1.0.0"
+    SIMULATION_ID: ClassVar[str]          # esim. "cip"
+    SIMULATION_NAME: ClassVar[str]        # esim. "Clean-In-Place"
+    SIMULATION_VERSION: ClassVar[str]     # esim. "2.0.0"
 
     @classmethod
     @abstractmethod

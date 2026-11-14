@@ -32,9 +32,9 @@ if ! command -v ufw >/dev/null 2>&1; then
 fi
 
 # Default deny, but allow outgoing so the box can install packages.
-ufw --force default allow incoming
+ufw --force default deny incoming
 ufw --force default allow outgoing
-ok "default policy: allow incoming, allow outgoing"
+ok "default policy: deny incoming, allow outgoing"
 
 ufw allow from "$INTRANET_CIDR" to any port 22 proto tcp comment 'SSH (intranet)'
 ufw allow from "$INTRANET_CIDR" to any port 8000 proto tcp comment 'Django UI (intranet)'
@@ -49,4 +49,4 @@ echo
 ufw status verbose
 echo
 echo "Firewall is active. To add another intranet range:"
-echo "  sudo ufw allow from 10.0.1.0/24 to any port 8000 proto tcp"
+echo "sudo ufw allow from 10.0.1.0/24 to any port 8000 proto tcp"
