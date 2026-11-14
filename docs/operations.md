@@ -1,15 +1,22 @@
 # Ylläpitokäsikirja
+# Ylläpitokäsikirja
 
+**Kohdeyleisö:** järjestelmänvalvoja, joka ottaa palvelimen haltuunsa luovutuksen jälkeen.  
+**Laajuus:** CIP-simulaatioalustan ajaminen, valvonta, varmuuskopiointi ja vianetsintä tuotannossa.
 **Kohdeyleisö:** järjestelmänvalvoja, joka ottaa palvelimen haltuunsa luovutuksen jälkeen.  
 **Laajuus:** CIP-simulaatioalustan ajaminen, valvonta, varmuuskopiointi ja vianetsintä tuotannossa.
 
 Jos etsit loppukäyttäjän ohjetta ("miten istunto luodaan?"), katso [quickstart.md](quickstart.md).  
 Jos etsit suunnitteluperusteluja, katso [architecture.md](architecture.md).
+Jos etsit loppukäyttäjän ohjetta ("miten istunto luodaan?"), katso [quickstart.md](quickstart.md).  
+Jos etsit suunnitteluperusteluja, katso [architecture.md](architecture.md).
 
+## 1. Mitä palvelimella pyörii
 ## 1. Mitä palvelimella pyörii
 
 Alusta koostuu neljästä pitkäikäisestä CIP-systemd-palvelusta, tapahtumien siivouksen oneshot-palvelusta ja timerista, Rediksestä sekä SQLite-tietokannasta. Kaikkia hallinnoidaan systemd:llä - **älä käynnistä niitä käsin** äläkä käytä `scripts/stack.sh`-skriptiä tuotantopalvelimella.
 
+| Yksikkö | Tehtävä | Portti(t) |
 | Yksikkö | Tehtävä | Portti(t) |
 |---|---|---|
 | `cip-control-plane.service` | Django HTTP + WebSocket -palvelin (Uvicorn) | `8000/tcp` (vain sisäverkko) |
@@ -46,7 +53,157 @@ sudo systemctl is-enabled cip-control-plane cip-worker-pool cip-event-consumer c
 Yhden palvelun uudelleenkäynnistys (turvallista - muut istunnot jatkavat):
 
 ```bash
+| `cip-control-plane.service` | Django HTTP + WebSocket -palvelin (Uvicorn) | `8000/tcp` (vain sisäverkko) |
+| `cip-worker-pool.service` | Käynnistää ja seuraa simulaatiotyöläisprosesseja | - |
+| `cip-event-consumer.service` | Lukee Rediksen elinkaaritapahtumat, päivittää tietokannan, työntää reaaliaikapäivitykset selaimiin | - |
+| `cip-gateway.service` | Kokoaa kaikkien työläisten OPC UA -palvelimet yhdeksi päätepisteeksi | `8080/tcp` (vain sisäverkko) |
+| `cip-purge-events.timer` | Yöllinen yli 30 päivää vanhojen istuntotapahtumien siivous | - |
+
+Tukevat komponentit:
+
+| Komponentti | Tehtävä |
+|---|---|
+| `redis-server.service` | Viestiväylä (streamit + sydämenlyönnit + porttivaraukset). Aptin hallinnoima, ei CIP-asentajan. |
+| `/var/lib/cip-sim/db.sqlite3` | Django-tietokanta (istunnot, katalogi, tapahtumaloki). |
+| `/etc/cip-sim/env` | Kaikki ajonaikainen konfiguraatio. **Omistaja root, ryhmä `cip`, tila 0640.** Älä muokkaa `cip`-käyttäjänä. |
+| `/var/log/cip-sim/` | Varattu tiedostopohjaisille lokeille (tällä hetkellä käyttämätön; lokit menevät journaldiin). |
+| `/opt/cip-sim/` | Sovellushakemisto ja sen virtualenv. |
+
+## 2. Päivittäinen palveluhallinta
+
+Kaikki alla olevat komennot olettavat rootin tai salasanattoman `sudo`-oikeuden.
+
+### Tila
+
+```bash
+sudo systemctl status cip-control-plane cip-worker-pool cip-event-consumer cip-gateway
+sudo systemctl status cip-purge-events.timer
+sudo systemctl is-active cip-*
+sudo systemctl is-enabled cip-control-plane cip-worker-pool cip-event-consumer cip-gateway cip-purge-events.timer
+```
+
+### Käynnistys, pysäytys ja uudelleenkäynnistys
+
+Yhden palvelun uudelleenkäynnistys (turvallista - muut istunnot jatkavat):
+
+```bash
 sudo systemctl restart cip-control-plane
+```
+
+Kaikkien uudelleenkäynnistys (lyhyt OPC UA -katko yhdistetyille PLC:ille):
+
+```bash
+sudo systemctl restart cip-control-plane cip-event-consumer cip-worker-pool cip-gateway
+```
+
+**Älä** pysäytä `cip-worker-pool`-palvelua ellet aio myös tappaa kaikkia käynnissä olevia simulaatioita. Työläiset ovat daemonin prosessiryhmän lapsia; `systemctl stop cip-worker-pool` lähettää SIGTERM:in daemonille, joka sitten sammuttaa jokaisen seuraamansa työläisen siististi (enintään `WORKER_STOP_GRACE` sekuntia per työläinen).
+
+### Konfiguraation uudelleenlataus ilman täyttä uudelleenkäynnistystä
+
+Ympäristötiedosto luetaan prosessin käynnistyessä. Live-latausta ei ole - **uudelleenkäynnistys vaaditaan**:
+
+```bash
+sudoedit /etc/cip-sim/env
+sudo systemctl restart cip-control-plane cip-event-consumer cip-worker-pool cip-gateway
+```
+
+### Käynnistyksen yhteydessä
+
+Asentaja ottaa kaiken käyttöön. Tarkista huoltotoimenpiteen jälkeen:
+
+```bash
+sudo systemctl is-enabled cip-control-plane cip-worker-pool cip-event-consumer cip-gateway cip-purge-events.timer
+```
+
+## 3. Lokit
+
+Kaikki palvelut kirjaavat journaldiin **rivinvaihdolla eroteltuna JSON:na** (yksi objekti per rivi, kentät `ts`, `level`, `logger`, `msg` ja mahdolliset kutsujan lisäämät `extra`-kentät - tyypillisesti `session_id`, `session_name`, `port`, `pid`).
+
+### Palvelun seuraaminen
+
+```bash
+sudo journalctl -u cip-control-plane -f
+sudo journalctl -u cip-worker-pool -f
+sudo journalctl -u cip-event-consumer -f
+sudo journalctl -u cip-gateway -f
+```
+
+Kaikkien CIP-palveluiden seuraaminen yhdessä:
+
+```bash
+sudo journalctl -u 'cip-*' -f
+```
+
+### Historian tarkastelu
+
+Viimeiset 200 riviä:
+
+```bash
+sudo journalctl -u cip-worker-pool -n 200
+```
+
+Tietystä ajasta alkaen (ISO 8601; palvelimen paikallinen aika ellei perään lisätä `Z`):
+
+```bash
+sudo journalctl -u cip-control-plane --since '2026-11-08 09:00' --until '2026-11-08 11:00'
+```
+
+Vain virheet:
+
+```bash
+sudo journalctl -u cip-control-plane -p err
+```
+
+### Rakenteelliset haut
+
+Koska hyötykuorma on JSON:ia, putkita `jq`:lle kenttien suodattamiseksi. Näytä yhden istunnon tapahtumat:
+
+```bash
+sudo journalctl -u cip-worker-pool -o cat | jq -c 'select(.session_id == "9c1b...uuid...")'
+```
+
+Näytä jokainen tilasiirtymä tietokannasta (ohittaa lokit ja on usein nopeampaa):
+
+```bash
+sudo -u cip /opt/cip-sim/.venv/bin/python /opt/cip-sim/manage.py shell -c 'from control_plane.apps.sessions_mgr.models import SessionEvent; print("\n".join(f"{e.occurred_at.isoformat()} {e.event:10s} {e.detail}" for e in SessionEvent.objects.filter(session_id="<uuid>").order_by("occurred_at")))'
+```
+
+### Lokien säilytys
+
+journald:n oletukset Ubuntu 22.04:llä ovat anteliaat (yleensä ~10 % `/var/log`:sta). Tarkista:
+
+```bash
+journalctl --disk-usage
+grep -E '^(SystemMaxUse|MaxRetentionSec)' /etc/systemd/journald.conf
+```
+
+Jos tarvitsee käyttäjän olevan adm ryhmässä:
+```bash
+sudo usermod -aG adm $USER
+```
+jonka jälkeen kirjaudu ulos ja sisään.
+
+Jos säilytystä pitää säätää, muokkaa `/etc/systemd/journald.conf` ja aja `sudo systemctl restart systemd-journald`.
+
+## 4. Konfiguraatio
+
+**Yksi totuuden lähde:** `/etc/cip-sim/env`. Jokainen palvelu lukee sen `EnvironmentFile=`-direktiivillä. Muutokset astuvat voimaan vasta kun asianomainen palvelu käynnistetään uudelleen.
+
+### Nykyisen konfiguraation katselu
+
+```bash
+sudo cat /etc/cip-sim/env
+```
+
+### Arvon muuttaminen
+
+```bash
+sudoedit /etc/cip-sim/env
+```
+
+Muokkaa, tallenna, sitten:
+
+```bash
 ```
 
 Kaikkien uudelleenkäynnistys (lyhyt OPC UA -katko yhdistetyille PLC:ille):
