@@ -18,7 +18,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-INTRANET_CIDR="${INTRANET_CIDR:-10.120.36.0/24}"
+INTRANET_CIDR="${INTRANET_CIDR:-10.0.0.0/24}"
 
 banner() { printf '\n\033[1;36m== %s\033[0m\n' "$*"; }
 ok()     { printf '   \033[1;32mok\033[0m  %s\n' "$*"; }
@@ -31,13 +31,13 @@ if ! command -v ufw >/dev/null 2>&1; then
     apt-get install -y -qq ufw
 fi
 
-ufw --force default deny incoming
+ufw --force default allow incoming
 ufw --force default allow outgoing
-ok "default policy: deny incoming, allow outgoing"
+ok "default policy: allow incoming, allow outgoing"
 
-ufw allow from "$INTRANET_CIDR" to any port 22 proto tcp comment 'SSH (intranet)'
-ufw allow from "$INTRANET_CIDR" to any port 8000 proto tcp comment 'Django UI (intranet)'
-ufw allow from "$INTRANET_CIDR" to any port 8080 proto tcp comment 'OPC UA gateway (intranet)'
+sudo ufw allow from "$INTRANET_CIDR" to any port 22 proto tcp comment 'SSH (intranet)'
+sudo ufw allow from "$INTRANET_CIDR" to any port 8000 proto tcp comment 'Django UI (intranet)'
+sudo ufw allow from "$INTRANET_CIDR" to any port 8080 proto tcp comment 'OPC UA gateway (intranet)'
 ok "intranet rules added for 22/tcp, 8000/tcp, 8080/tcp"
 
 ufw --force enable
