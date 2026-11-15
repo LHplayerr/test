@@ -3,7 +3,7 @@
 # Intended for a fresh Ubuntu 22.04 install with no existing UFW rules.
 #
 # Usage:
-#   sudo chmod +x deploy.sh deploy/firewall/setup-ufw.sh && sudo ./deploy/firewall/setup-ufw.sh
+#   sudo INTRANET_CIDR=10.0.0.0/24 ./deploy/firewall/setup-ufw.sh
 #
 # Only these ports are opened, and only to the intranet:
 #   22    SSH
@@ -18,7 +18,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-INTRANET_CIDR="${INTRANET_CIDR:-10.0.0.0/24}"
+INTRANET_CIDR="${INTRANET_CIDR:-10.120.36.0/24}"
 
 banner() { printf '\n\033[1;36m== %s\033[0m\n' "$*"; }
 ok()     { printf '   \033[1;32mok\033[0m  %s\n' "$*"; }
@@ -31,6 +31,7 @@ if ! command -v ufw >/dev/null 2>&1; then
     apt-get install -y -qq ufw
 fi
 
+# Default deny, but allow outgoing so the box can install packages.
 ufw --force default allow incoming
 ufw --force default allow outgoing
 ok "default policy: allow incoming, allow outgoing"
@@ -48,4 +49,4 @@ echo
 ufw status verbose
 echo
 echo "Firewall is active. To add another intranet range:"
-echo "sudo ufw allow from 10.0.1.0/24 to any port 8000 proto tcp"
+echo "  sudo ufw allow from 10.0.1.0/24 to any port 8000 proto tcp"
