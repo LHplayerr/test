@@ -18,7 +18,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-INTRANET_CIDR="${INTRANET_CIDR:-10.120.36.0/24}"
+INTRANET_CIDR="${INTRANET_CIDR:-10.0.0.0/24}"
 
 banner() { printf '\n\033[1;36m== %s\033[0m\n' "$*"; }
 ok()     { printf '   \033[1;32mok\033[0m  %s\n' "$*"; }
