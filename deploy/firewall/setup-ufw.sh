@@ -3,7 +3,7 @@
 # Intended for a fresh Ubuntu 22.04 install with no existing UFW rules.
 #
 # Usage:
-#   sudo INTRANET_CIDR=10.0.0.0/24 ./deploy/firewall/setup-ufw.sh
+#   sudo ./deploy/firewall/setup-ufw.sh
 #
 # Only these ports are opened, and only to the intranet:
 #   22    SSH
