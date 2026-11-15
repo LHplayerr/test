@@ -59,9 +59,9 @@ cip-sim/
 
 | Tiedosto | Kohdeyleisö |
 |---|---|
-| [docs/quickstart.md](https://https://github.com/tomasmak-boop/SimulaattoriProjekti/tree/main/docs/quickstart.md) | Opiskelijat ja käyttäjät |
-| [docs/operations.md](https://https://github.com/tomasmak-boop/SimulaattoriProjekti/tree/main/docs/operations.md) | Järjestelmänvalvojat |
-| [docs/architecture.md](https://https://github.com/tomasmak-boop/SimulaattoriProjekti/tree/main/docs/architecture.md) | Kehittäjät ja arkki­tehdit |
+| [docs/quickstart.md](https://https://github.com/tomasmak-boop/SimulaattoriProjekti/blob/main/docs/quickstart.md) | Opiskelijat ja käyttäjät |
+| [docs/operations.md](https://https://github.com/tomasmak-boop/SimulaattoriProjekti/blob/main/docs/operations.md) | Järjestelmänvalvojat |
+| [docs/architecture.md](https://https://github.com/tomasmak-boop/SimulaattoriProjekti/blob/main/docs/architecture.md) | Kehittäjät ja arkki­tehdit |
 
 ## Vaatimukset
 
