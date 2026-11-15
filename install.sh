@@ -229,7 +229,7 @@ cat <<EOF
     cip-gateway.service         - OPC UA aggregation gateway on :8080
     cip-purge-events.timer      - nightly event-log purge
 
-  Browser UI:      http://<this-server>:8000/
-  OPC UA endpoint: opc.tcp://<this-server>:8080/gateway/
+  Browser UI:      http://{$SERVER_IP}:8000/
+  OPC UA endpoint: opc.tcp://{$SERVER_IP}:8080/gateway/
 
 EOF
