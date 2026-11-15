@@ -35,6 +35,7 @@ ufw --force default allow incoming
 ufw --force default allow outgoing
 ok "default policy: allow incoming, allow outgoing"
 
+ufw allow 22/tcp >/dev/null 2>&1
 ufw allow from "$INTRANET_CIDR" to any port 22 proto tcp comment 'SSH (intranet)'
 ufw allow from "$INTRANET_CIDR" to any port 8000 proto tcp comment 'Django UI (intranet)'
 ufw allow from "$INTRANET_CIDR" to any port 8080 proto tcp comment 'OPC UA gateway (intranet)'
