@@ -32,9 +32,9 @@ if ! command -v ufw >/dev/null 2>&1; then
 fi
 
 # Default deny, but allow outgoing so the box can install packages.
-ufw --force default allow incoming
+ufw --force default deny incoming
 ufw --force default allow outgoing
-ok "default policy: allow incoming, allow outgoing"
+ok "default policy: deny incoming, allow outgoing"
 
 ufw allow from "$INTRANET_CIDR" to any port 22 proto tcp comment 'SSH (intranet)'
 ufw allow from "$INTRANET_CIDR" to any port 8000 proto tcp comment 'Django UI (intranet)'
