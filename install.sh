@@ -24,7 +24,7 @@ STATE_DIR="${STATE_DIR:-/var/lib/cip-sim}"
 LOG_DIR="${LOG_DIR:-/var/log/cip-sim}"
 SERVICE_USER="${SERVICE_USER:-cip}"
 PYTHON_BIN="${PYTHON_BIN:-python3.11}"
-INTRANET_CIDR="${INTRANET_CIDR:-}"
+INTRANET_CIDR="${INTRANET_CIDR:-10.0.0.0/24}"
 
 # ---------- presentation ----------
 banner()  { printf '\n\033[1;36m========== %s ==========\033[0m\n' "$*"; }
